@@ -86,7 +86,7 @@ exports.updatePet = async (req, res) => {
     pet.peso = peso || pet.peso;
     pet.necessidadesEspeciais = necessidadesEspeciais || pet.necessidadesEspeciais;
     pet.comportamento = comportamento || pet.comportamento;
-    pet.adotado = adotado !== undefined ? adotado : pet.adotado;
+    pet.adotado = adotado === 'true' ? true : adotado === 'false' ? false : pet.adotado;
     if (imagem) {
       pet.imagem = imagem;
     }

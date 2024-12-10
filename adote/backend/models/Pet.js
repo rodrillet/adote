@@ -1,83 +1,104 @@
-// routes/pets.js
+// backend/models/Pet.js
 
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const Pet = require('../models/Pet');
-const auth = require('../middleware/auth'); // Middleware de autenticação
+const mongoose = require('mongoose');
 
-// Configuração do multer para upload de imagens
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+// Definição do Schema para Pet
+const PetSchema = new mongoose.Schema({
+  nome: {
+    type: String,
+    required: [true, 'O nome do pet é obrigatório.'],
+    trim: true,
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
+  idade: {
+    type: Number,
+    required: [true, 'A idade do pet é obrigatória.'],
+    min: [0, 'A idade não pode ser negativa.'],
+  },
+  raca: {
+    type: String,
+    required: [true, 'A raça do pet é obrigatória.'],
+    trim: true,
+  },
+  descricao: {
+    type: String,
+    required: [true, 'A descrição do pet é obrigatória.'],
+    trim: true,
+  },
+  tipo: {
+    type: String,
+    required: [true, 'O tipo do pet é obrigatório.'],
+    enum: {
+      values: ['Cachorro', 'Gato'],
+      message: 'Tipo inválido. Deve ser "Cachorro" ou "Gato".',
+    },
+  },
+  sexo: {
+    type: String,
+    required: [true, 'O sexo do pet é obrigatório.'],
+    enum: {
+      values: ['Masculino', 'Feminino'],
+      message: 'Sexo inválido. Deve ser "Masculino" ou "Feminino".',
+    },
+  },
+  castrado: {
+    type: Boolean,
+    default: false,
+  },
+  vacinado: {
+    type: Boolean,
+    default: false,
+  },
+  local: {
+    type: String,
+    required: [true, 'O local aproximado do pet é obrigatório.'],
+    trim: true,
+  },
+  porte: {
+    type: String,
+    required: [true, 'O porte do pet é obrigatório.'],
+    enum: {
+      values: ['Pequeno', 'Médio', 'Grande'],
+      message: 'Porte inválido. Deve ser "Pequeno", "Médio" ou "Grande".',
+    },
+  },
+  dataNascimento: {
+    type: Date,
+    required: [true, 'A data de nascimento do pet é obrigatória.'],
+  },
+  peso: {
+    type: Number,
+    required: [true, 'O peso do pet é obrigatório.'],
+    min: [0, 'O peso não pode ser negativo.'],
+  },
+  necessidadesEspeciais: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  comportamento: {
+    type: String,
+    required: [true, 'O comportamento do pet é obrigatório.'],
+    trim: true,
+  },
+  imagem: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  adotado: {
+    type: Boolean,
+    default: false,
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'O usuário que cadastrou o pet é obrigatório.'],
+  },
+}, {
+  timestamps: true, // Adiciona campos createdAt e updatedAt automaticamente
 });
 
-const upload = multer({ storage: storage });
+// Criação do modelo Pet a partir do Schema
+const Pet = mongoose.model('Pet', PetSchema);
 
-// Rota para cadastrar um novo pet
-router.post('/', auth, upload.single('imagem'), async (req, res) => {
-  console.log("Recebendo requisição para criar pet"); // Log inicial
-
-  try {
-    const {
-      nome,
-      idade,
-      raca,
-      descricao,
-      tipo,
-      sexo,
-      castrado,
-      vacinado,
-      local,
-      porte,
-      dataNascimento,
-      peso,
-      necessidadesEspeciais,
-      comportamento,
-    } = req.body;
-
-    console.log("Dados recebidos:", req.body); // Log de dados recebidos
-    if (req.file) console.log("Imagem recebida:", req.file.filename); // Log para a imagem
-
-    if (
-      !nome || !idade || !raca || !descricao || !tipo ||
-      !sexo || !local || !porte || !dataNascimento ||
-      !peso || !comportamento
-    ) {
-      return res.status(400).json({ mensagem: 'Todos os campos obrigatórios devem ser preenchidos.' });
-    }
-
-    const novoPet = new Pet({
-      nome,
-      idade,
-      raca,
-      descricao,
-      tipo,
-      sexo,
-      castrado: castrado === 'true',
-      vacinado: vacinado === 'true',
-      local,
-      porte,
-      dataNascimento,
-      peso,
-      necessidadesEspeciais,
-      comportamento,
-      imagem: req.file ? req.file.filename : null,
-      user: req.user ? req.user.id : null,
-    });
-
-    await novoPet.save();
-    console.log("Pet cadastrado com sucesso:", novoPet); // Log de sucesso
-    res.status(201).json({ mensagem: 'Pet cadastrado com sucesso!', pet: novoPet });
-  } catch (error) {
-    console.error('Erro ao cadastrar pet:', error);
-    res.status(500).json({ mensagem: 'Erro interno do servidor.' });
-  }
-});
-
-module.exports = router;
+module.exports = Pet;

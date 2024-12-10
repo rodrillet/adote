@@ -1,4 +1,4 @@
-// src/components/PetForm.js
+// frontend/src/components/PetForm.js
 
 import React, { useState, useRef } from 'react';
 import api from '../services/api';
@@ -62,9 +62,15 @@ const PetForm = () => {
     if (imagemRef.current && imagemRef.current.files[0]) {
       formData.append('imagem', imagemRef.current.files[0]);
     }
+
+    // Logs para depuração
+    console.log("FormData Enviado:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
   
     try {
-      await api.post('/pets', formData, {
+      const response = await api.post('/pets', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -73,6 +79,7 @@ const PetForm = () => {
       setMensagem({ tipo: 'sucesso', texto: 'Pet cadastrado com sucesso!' });
       setTimeout(() => navigate('/listar'), 2000);
     } catch (error) {
+      console.error('Erro ao cadastrar pet:', error);
       const mensagemErro = error.response?.data?.mensagem || 'Erro ao cadastrar pet. Tente novamente.';
       setMensagem({ tipo: 'erro', texto: mensagemErro });
     } finally {

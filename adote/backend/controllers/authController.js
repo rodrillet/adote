@@ -14,8 +14,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Email já está em uso' });
     }
 
-    // Cria um novo usuário
-    const newUser = new User({ nome, email, telefone, password });
+    // Cria um novo usuário com role padrão 'user'
+    const newUser = new User({ nome, email, telefone, password, role: 'user' });
     await newUser.save();
 
     res.status(201).json({ message: 'Usuário registrado com sucesso' });

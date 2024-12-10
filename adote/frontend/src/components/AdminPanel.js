@@ -19,12 +19,14 @@ const AdminPanel = () => {
   };
 
   const handleDelete = (id) => {
-    api.delete(`/pets/${id}`)
-      .then(() => {
-        setPets(pets.filter(pet => pet._id !== id));
-        alert('Pet deletado com sucesso!');
-      })
-      .catch(error => console.error(error));
+    if (window.confirm('Tem certeza que deseja deletar este pet?')) {
+      api.delete(`/pets/${id}`)
+        .then(() => {
+          setPets(pets.filter(pet => pet._id !== id));
+          alert('Pet deletado com sucesso!');
+        })
+        .catch(error => console.error(error));
+    }
   };
 
   const handleEdit = (id) => {

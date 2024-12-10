@@ -1,33 +1,42 @@
-// backend/routes/petsRoutes.js
+// backend/routes/pets.js
 
 const express = require('express');
 const router = express.Router();
-const petController = require('../controllers/petController');
 const multer = require('multer');
-const auth = require('../middleware/auth'); // Middleware de autenticação
+const petController = require('../controllers/petController');
+const auth = require('../middleware/auth');
 
 // Configuração do multer para upload de imagens
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Pasta onde as imagens serão armazenadas
+    cb(null, 'uploads/'); // Certifique-se de que a pasta 'uploads/' existe
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+    // Remover espaços e caracteres especiais do nome do arquivo
+    const sanitizedFilename = file.originalname.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9.-]/g, '');
+    cb(null, uniqueSuffix + '-' + sanitizedFilename);
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5MB para uploads
+  fileFilter: function (req, file, cb) {
+    // Filtrar apenas imagens (jpg, jpeg, png, gif)
+    const filetypes = /jpeg|jpg|png|gif/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(file.originalname.split('.').pop().toLowerCase());
 
-// Rotas para Pets
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Apenas imagens (jpg, jpeg, png, gif) são permitidas.'));
+  }
+});
 
-// Criar um novo pet (requer autenticação)
-router.post('/', auth, (req, res, next) => {
-  upload.single('imagem')(req, res, (err) => {
-    if (err) return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
-    next();
-  });
-}, petController.createPet);
+// Rota para cadastrar um novo pet
+router.post('/', auth(), upload.single('imagem'), petController.createPet);
 
 // Obter todos os pets
 router.get('/', petController.getAllPets);
@@ -35,15 +44,10 @@ router.get('/', petController.getAllPets);
 // Obter um pet por ID
 router.get('/:id', petController.getPetById);
 
-// Atualizar um pet por ID (requer autenticação)
-router.put('/:id', auth, (req, res, next) => {
-  upload.single('imagem')(req, res, (err) => {
-    if (err) return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
-    next();
-  });
-}, petController.updatePet);
+// Atualizar um pet por ID
+router.put('/:id', auth(), upload.single('imagem'), petController.updatePet);
 
-// Deletar um pet por ID (requer autenticação)
-router.delete('/:id', auth, petController.deletePet);
+// Deletar um pet por ID
+router.delete('/:id', auth(), petController.deletePet);
 
 module.exports = router;
