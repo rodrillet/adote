@@ -1,0 +1,15 @@
+/* src/index.css */
+
+/* Importa a fonte 'Sora' do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;700&display=swap');
+@import 'swiper/css';
+
+/* Importa as diretivas do Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globais adicionais (opcional) */
+body {
+  font-family: 'Sora', sans-serif;
+}
